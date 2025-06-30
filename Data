@@ -1,0 +1,15 @@
+import os
+
+root_path = "/content/"
+# List of expected class folders based on the output of the previous cell
+# You might need to adjust this list based on what's actually extracted
+class_folders = ['Jasmine', 'Arborio', 'Karacadag', 'Ipsala', 'basmati']
+
+print("Counts of images in each class folder:")
+for folder in class_folders:
+    folder_path = os.path.join(root_path, folder)
+    if os.path.isdir(folder_path):
+        files = os.listdir(folder_path)
+        print(f"📁 {folder}: {len(files)} images")
+    else:
+        print(f"Folder {folder} not found in {root_path}")
