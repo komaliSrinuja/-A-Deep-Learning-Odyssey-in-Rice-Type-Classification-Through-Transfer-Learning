@@ -1,0 +1,44 @@
+import tensorflow as tf
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
+from tensorflow.keras.applications import MobileNetV2
+from tensorflow.keras.models import Model
+from tensorflow.keras.layers import Dense, GlobalAveragePooling2D
+from tensorflow.keras.optimizers import Adam
+
+data_path = "/content/"
+
+# List of directories that contain the rice images (your classes)
+rice_classes = ['Jasmine', 'Arborio', 'Karacadag', 'Ipsala', 'basmati']
+
+# Note: Removed validation_split due to limited data.
+# For proper training, use validation_split with sufficient data.
+datagen = ImageDataGenerator(rescale=1./255)
+
+# Reduced batch size to 1 due to limited images per class
+# Removed subset argument as validation_split is not used
+# Explicitly specify the classes to include
+train_gen = datagen.flow_from_directory(
+    data_path,
+    classes=rice_classes, # Specify the class directories
+    target_size=(224, 224),
+    batch_size=1,
+    class_mode='categorical'
+)
+
+# Note: Training without a validation set is not recommended for robust models.
+# This is done here to allow the code to run with the current small dataset.
+base_model = MobileNetV2(weights='imagenet', include_top=False, input_shape=(224,224,3))
+base_model.trainable = False
+
+x = GlobalAveragePooling2D()(base_model.output)
+x = Dense(128, activation='relu')(x)
+output = Dense(train_gen.num_classes, activation='softmax')(x)
+
+model = Model(inputs=base_model.input, outputs=output)
+model.compile(optimizer=Adam(1e-4), loss='categorical_crossentropy', metrics=['accuracy'])
+
+print("Starting model training (without validation due to limited data)...")
+model.fit(train_gen, epochs=5) # Increased epochs slightly for demonstration with minimal data
+
+model.save("rice_classifier_model.h5")
+print("✅ Model trained and saved as rice_classifier_model.h5!")
