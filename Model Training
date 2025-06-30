@@ -1,0 +1,53 @@
+import tensorflow as tf
+from tensorflow.keras.preprocessing import image
+import numpy as np
+import matplotlib.pyplot as plt
+from google.colab import files
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
+
+# 1. Upload test image for prediction
+uploaded = files.upload()  # 📤 Choose a test image from your system
+
+# 2. Load the trained model
+# Make sure the model file 'rice_classifier_model.h5' exists after running the training cell.
+model = tf.keras.models.load_model("rice_classifier_model.h5")
+
+# 3. Get class names from the directory structure
+data_path = "/content/"
+# List of directories that contain the rice images (your classes) - must match training
+rice_classes = ['Jasmine', 'Arborio', 'Karacadag', 'Ipsala', 'basmati']
+
+# Create a dummy generator to get class_indices
+datagen_for_classes = ImageDataGenerator(rescale=1./255)
+# Explicitly specify the classes to include
+dummy_gen = datagen_for_classes.flow_from_directory(
+    data_path,
+    classes=rice_classes, # Specify the class directories
+    target_size=(224, 224),
+    batch_size=1,
+    class_mode='categorical'
+)
+class_names = list(dummy_gen.class_indices.keys())
+print(f"Class names used for prediction: {class_names}")
+
+# 4. Predict for uploaded image
+for fn in uploaded:
+    img_path = fn
+    img = image.load_img(img_path, target_size=(224, 224))
+    plt.imshow(img); plt.axis('off'); plt.title("Test Image"); plt.show()
+
+    img_array = image.img_to_array(img) / 255.0
+    img_array = np.expand_dims(img_array, axis=0)
+
+    prediction = model.predict(img_array)
+    predicted_class_index = np.argmax(prediction)
+
+    if predicted_class_index < len(class_names):
+        predicted_class = class_names[predicted_class_index]
+        confidence = np.max(prediction)
+
+        print(f"🔍 Predicted Rice Type: {predicted_class}")
+        print(f"📊 Confidence: {confidence:.2f}")
+    else:
+        print(f"⚠️ Could not determine class name for predicted index: {predicted_class_index}")
+        print(f"Prediction scores: {prediction}")
