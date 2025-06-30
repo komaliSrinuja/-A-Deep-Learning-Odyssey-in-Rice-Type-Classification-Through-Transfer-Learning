@@ -1,0 +1,4 @@
+import os
+
+# List the contents of the /content/ directory to find the extracted folder names
+print(os.listdir('/content/'))
